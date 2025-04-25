@@ -1,0 +1,6 @@
+{
+  "accentColor": "green",
+  "layout": "card",
+  "defaultTaskPriority": "medium",
+  "enablePomodoro": false
+} 
