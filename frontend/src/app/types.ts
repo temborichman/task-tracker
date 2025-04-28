@@ -18,6 +18,7 @@ export interface Task {
   urgency: TaskUrgency;
   dateCreated: string;
   dateCompleted?: string;
+  url?: string; // URL associated with the task
 }
 
 export interface Project {

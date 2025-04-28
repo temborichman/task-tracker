@@ -11,7 +11,9 @@ export const taskService = {
         console.error('Error fetching tasks:', errorData);
         throw new Error(errorData.error || 'Failed to fetch tasks');
       }
-      return response.json();
+      const tasks = await response.json();
+      console.log('Fetched tasks:', tasks);
+      return tasks;
     } catch (error) {
       console.error('Error in getAllTasks:', error);
       throw error;
@@ -58,7 +60,9 @@ export const taskService = {
         console.error('Error updating task:', errorData);
         throw new Error(errorData.error || 'Failed to update task');
       }
-      return response.json();
+      const updatedTask = await response.json();
+      console.log('Task updated successfully:', updatedTask);
+      return updatedTask;
     } catch (error) {
       console.error('Error in updateTask:', error);
       throw error;
@@ -75,9 +79,54 @@ export const taskService = {
         console.error('Error deleting task:', errorData);
         throw new Error(errorData.error || 'Failed to delete task');
       }
+      console.log('Task deleted successfully:', taskId);
     } catch (error) {
       console.error('Error in deleteTask:', error);
       throw error;
     }
   },
+
+  async completeTask(taskId: string): Promise<Task> {
+    try {
+      const response = await fetch(`${API_URL}/tasks/${taskId}/complete`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error completing task:', errorData);
+        throw new Error(errorData.error || 'Failed to complete task');
+      }
+      const completedTask = await response.json();
+      console.log('Task completed successfully:', completedTask);
+      return completedTask;
+    } catch (error) {
+      console.error('Error in completeTask:', error);
+      throw error;
+    }
+  },
+
+  async reactivateTask(taskId: string): Promise<Task> {
+    try {
+      const response = await fetch(`${API_URL}/tasks/${taskId}/reactivate`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error reactivating task:', errorData);
+        throw new Error(errorData.error || 'Failed to reactivate task');
+      }
+      const reactivatedTask = await response.json();
+      console.log('Task reactivated successfully:', reactivatedTask);
+      return reactivatedTask;
+    } catch (error) {
+      console.error('Error in reactivateTask:', error);
+      throw error;
+    }
+  }
 }; 

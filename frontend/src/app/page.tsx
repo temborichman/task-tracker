@@ -475,24 +475,10 @@ export default function Home() {
     }
   };
 
-  return (
-    <div className="flex h-screen bg-[#0A0A0A] text-white">
-      <Sidebar activeView="dashboard" />
-      <div className="flex-1 overflow-y-auto">
-        <ProjectsPage
-          projects={projects}
-          completedProjects={completedProjects}
-          activeProjectId={activeProjectId}
-          onProjectSelect={setActiveProjectId}
-          onProjectComplete={handleProjectComplete}
-          onProjectReactivate={handleProjectReactivate}
-          tasks={allTasks}
-          onTaskDelete={handleDeleteTask}
-          onAddTaskUrl={(projectId, url) => {
-            router.push(`/dashboard?projectId=${projectId}`);
-          }}
-        />
-      </div>
-    </div>
-  );
+  // Redirect to dashboard on initial load
+  useEffect(() => {
+    router.push('/dashboard');
+  }, [router]);
+
+  return null; // Return null since we're redirecting
 }

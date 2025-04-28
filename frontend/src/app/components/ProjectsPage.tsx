@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Project, Task } from '../types';
 import ProjectCard from './ProjectCard';
 import TaskSelectionModal from './TaskSelectionModal';
+import AddTaskLinkModal from './AddTaskLinkModal';
+import { PlusIcon } from '@heroicons/react/24/outline';
 
 interface ProjectsPageProps {
   projects: Project[];
@@ -11,7 +13,10 @@ interface ProjectsPageProps {
   onProjectComplete: (projectId: string) => void;
   onProjectReactivate: (projectId: string) => void;
   tasks: Task[];
+  completedTasks: Task[];
   onTaskDelete: (taskId: string) => void;
+  onTaskComplete: (taskId: string) => void;
+  onTaskReactivate: (taskId: string) => void;
   onAddTaskUrl: (projectId: string, url: string) => void;
 }
 
@@ -25,10 +30,14 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({
   onProjectComplete,
   onProjectReactivate,
   tasks,
+  completedTasks,
   onTaskDelete,
+  onTaskComplete,
+  onTaskReactivate,
   onAddTaskUrl,
 }) => {
   const [projectType, setProjectType] = useState<ProjectType>('all');
+  const [showAddTaskLinkModal, setShowAddTaskLinkModal] = useState(false);
 
   const filteredProjects = projects.filter(project => {
     if (projectType === 'all') return true;
@@ -39,6 +48,18 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({
     if (projectType === 'all') return true;
     return projectType === 'main' ? project.isMainProject : !project.isMainProject;
   });
+
+  const handleAddTaskLink = () => {
+    setShowAddTaskLinkModal(true);
+  };
+
+  const handleTaskLinkSubmit = (taskName: string, taskUrl: string) => {
+    if (!activeProjectId) {
+      alert('Please select a project first');
+      return;
+    }
+    onAddTaskUrl(activeProjectId, taskUrl);
+  };
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -53,8 +74,8 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({
             </div>
           </div>
 
-          {/* Project Type Filter */}
-          <div className="flex items-center gap-4 mt-6 mb-6">
+          {/* Project Type Filter and Add Task Link Button */}
+          <div className="flex items-center justify-between mt-6 mb-6">
             <div className="flex items-center gap-2 bg-neutral-800 rounded-lg p-1">
               <button
                 onClick={() => setProjectType('all')}
@@ -87,6 +108,14 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({
                 Side Projects
               </button>
             </div>
+
+            <button
+              onClick={handleAddTaskLink}
+              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+            >
+              <PlusIcon className="h-5 w-5" />
+              Add Task Link
+            </button>
           </div>
 
           {/* Project Stats */}
@@ -98,6 +127,14 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({
             <div className="flex items-center gap-2 px-4 py-2 bg-neutral-800 rounded-lg">
               <span className="w-3 h-3 bg-neutral-500 rounded-full"></span>
               <span className="text-sm text-neutral-300">{filteredCompletedProjects.length} Completed</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-neutral-800 rounded-lg">
+              <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
+              <span className="text-sm text-neutral-300">{tasks.length} Active Tasks</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-neutral-800 rounded-lg">
+              <span className="w-3 h-3 bg-purple-500 rounded-full"></span>
+              <span className="text-sm text-neutral-300">{completedTasks.length} Completed Tasks</span>
             </div>
           </div>
         </div>
@@ -115,8 +152,11 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({
                   key={project.id}
                   project={project}
                   tasks={tasks.filter(task => task.projectId === project.id)}
+                  completedTasks={completedTasks.filter(task => task.projectId === project.id)}
                   isActive={activeProjectId === project.id}
                   onComplete={() => onProjectComplete(project.id)}
+                  onTaskComplete={onTaskComplete}
+                  onTaskReactivate={onTaskReactivate}
                   onTaskDelete={onTaskDelete}
                   onAddTaskUrl={onAddTaskUrl}
                 />
@@ -143,17 +183,60 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({
           </div>
           {filteredCompletedProjects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCompletedProjects.map(project => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  tasks={tasks.filter(task => task.projectId === project.id)}
-                  isActive={false}
-                  onReactivate={() => onProjectReactivate(project.id)}
-                  onTaskDelete={onTaskDelete}
-                  onAddTaskUrl={onAddTaskUrl}
-                />
-              ))}
+              {filteredCompletedProjects.map(project => {
+                const projectTasks = completedTasks.filter(task => task.projectId === project.id);
+                console.log(`Project ${project.name} (${project.id}) completed tasks:`, projectTasks);
+                return (
+                  <div key={project.id} className="bg-neutral-900 rounded-lg p-4 mb-4">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">{project.name}</h3>
+                        {project.description && (
+                          <p className="text-neutral-400 text-sm mt-1">{project.description}</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => onProjectReactivate(project.id)}
+                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                      >
+                        Reactivate
+                      </button>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <h4 className="text-sm font-medium text-neutral-400 mb-2">Completed Tasks</h4>
+                      {projectTasks.length > 0 ? (
+                        <div className="space-y-2">
+                          {projectTasks.map(task => (
+                            <div key={task.id} className="bg-neutral-800 rounded p-3">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="font-medium">{task.title}</p>
+                                  <p className="text-sm text-neutral-400">
+                                    Created: {new Date(task.dateCreated).toLocaleDateString()}
+                                  </p>
+                                </div>
+                                {task.url && (
+                                  <a
+                                    href={task.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:text-blue-300 text-sm"
+                                  >
+                                    View Link
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-neutral-500 text-sm">No completed tasks for this project</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="bg-neutral-900 rounded-xl p-8 text-center border border-neutral-800">
@@ -168,6 +251,16 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({
           )}
         </div>
       </div>
+
+      {/* Add Task Link Modal */}
+      <AddTaskLinkModal
+        isOpen={showAddTaskLinkModal}
+        onClose={() => setShowAddTaskLinkModal(false)}
+        onAdd={handleTaskLinkSubmit}
+        projects={[...filteredProjects, ...filteredCompletedProjects]}
+        activeProjectId={activeProjectId}
+        onProjectSelect={onProjectSelect}
+      />
     </div>
   );
 };
